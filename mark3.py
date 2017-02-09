@@ -18,14 +18,11 @@ cv2.moveWindow('edge',1300,5)
 cv2.namedWindow('erode')
 cv2.moveWindow('erode',1300,5)'''
 kernel = np.ones((5, 5), np.uint8)
+cv2.createTrackbar('epsilon', 'Video', 1, 100, nothing)#for approxPolyDP
 
 print('Press \'q\' in window to stop')
-cv2.createTrackbar('val1', 'Video', 37, 1000, nothing)
-cv2.createTrackbar('val2', 'Video', 43, 1000, nothing)
-cv2.createTrackbar('bin', 'Video',20,50,nothing)
-cv2.createTrackbar('erode', 'Video',4,10,nothing)#after plenty of testing
 imn=cv2.imread('blank.bmp')
-#cv2.createTrackbar('dilate', 'edge',0,10,nothing)
+
 def pretty_depth(depth):
     np.clip(depth, 0, 2**10 - 1, depth)
     depth >>= 2
@@ -41,6 +38,7 @@ while 1:
 	f12=0
 	f10=0
 	f8=0
+
 #get kinect input__________________________________________________________________________
 	dst = pretty_depth(freenect.sync_get_depth()[0])#input from kinect
 	orig = freenect.sync_get_video()[0]
@@ -50,8 +48,8 @@ while 1:
 	cv2.rectangle(dst,(0,0),(640,480),(40,100,0),2)
 	   
 #image binning (for distinct edges)________________________________________________________
-	binn=cv2.getTrackbarPos('bin', 'Video')
-	e=cv2.getTrackbarPos('erode', 'Video')
+	binn=20
+	e=4
     	dst = (dst/binn)*binn
 	#dst = (dst/20)*20 #after plenty of testing 
 	dst=cv2.erode(dst, kernel, iterations=e)
@@ -60,8 +58,6 @@ while 1:
 #Video detection___________________________________________________________________________
 	v1 = 37
 	v2 = 43
-	v1 = cv2.getTrackbarPos('val1', 'Video')
-	v2 = cv2.getTrackbarPos('val2', 'Video')
 	edges = cv2.Canny(dst, v1, v2)
 	#cv2.imshow('edge', edges)
 
@@ -79,13 +75,12 @@ while 1:
 			cx = int(M['m10']/M['m00'])
 			cy = int(M['m01']/M['m00'])
 			cv2.circle(dst, (cx, cy), 6, (0, 255, 0), 3)
-	cx = int(cx/len(contours))
-	cy = int(cy/len(contours))
+		cx = cx/len(contours)
+		cy = cy/len(contours)
 	except:
 		pass'''
 
 #boundingRect approach_______________________________________________________________________
-    	cv2.createTrackbar('epsilon', 'Video', 1, 100, nothing)#for approxPolyDP
     	ep=cv2.getTrackbarPos('epsilon', 'Video') 
     	'''for i in range(len(contours)):
 		if (cv2.contourArea(contours[i])>1):
@@ -97,13 +92,13 @@ while 1:
 			box = cv2.cv.BoxPoints(rect)                    # Rotated Rect approach failed
 			box = np.int0(box)
 			cv2.drawContours(dst,[box],0,(50,0,255),2)'''
+
 #approxPolyDP approach________________________________________________________________________
 	#approx = cv2.approxPolyDP(contours[i],(ep/100)*cv2.arcLength(contours[i],True),True)
 	#cv2.drawContours(dst, approx, -1, (0, 0, 2), 1)
 
 #defined points approach (to check: runtime)________________________________________________
-	cv2.createTrackbar('spacing', 'Video', 30, 100, nothing)#for approxPolyDP
-	spac=cv2.getTrackbarPos('spacing', 'Video') 
+	spac=30
 	(rows,cols)=dst.shape # 480 rows and 640 cols
 	#print col
 
@@ -143,8 +138,6 @@ while 1:
 				cv2.putText(dst,"6",(spac*j,spac*i),cv2.FONT_HERSHEY_PLAIN,1,(0,200,20),1)
 			if (dst[spac*i,spac*j]==220):
 				cv2.putText(dst,"7",(spac*j,spac*i),cv2.FONT_HERSHEY_PLAIN,1,(0,200,20),1)
-
-
 				
 #imshow outputs______________________________________________________________________   
 	cv2.imshow('Input',orig)
